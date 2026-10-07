@@ -13,7 +13,9 @@ brews:
   - repository:
       owner: manasmanohar
       name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+      git:
+        url: git@github.com:manasmanohar/homebrew-tap.git
+        private_key: "{{ .Env.HOMEBREW_TAP_DEPLOY_KEY }}"
     homepage: https://github.com/manasmanohar/claudea
     description: Switch Claude Code between accounts and see each account's usage
     license: MIT

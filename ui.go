@@ -30,11 +30,13 @@ const (
 )
 
 var (
-	cGreen  = lipgloss.AdaptiveColor{Light: "#2e7d32", Dark: "#87af87"}
-	cRed    = lipgloss.AdaptiveColor{Light: "#c62828", Dark: "#d78787"}
-	cAccent = lipgloss.AdaptiveColor{Light: "#1f5fa8", Dark: "#87afd7"}
-	cDim    = lipgloss.AdaptiveColor{Light: "#6c6c6c", Dark: "#8a8a8a"}
-	cFaint  = lipgloss.AdaptiveColor{Light: "#b2b2b2", Dark: "#585858"}
+	cGreen   = lipgloss.AdaptiveColor{Light: "#2e7d32", Dark: "#87af87"}
+	cRed     = lipgloss.AdaptiveColor{Light: "#c62828", Dark: "#d78787"}
+	cAccent  = lipgloss.AdaptiveColor{Light: "#1f5fa8", Dark: "#87afd7"}
+	cDim     = lipgloss.AdaptiveColor{Light: "#6c6c6c", Dark: "#8a8a8a"}
+	cFaint   = lipgloss.AdaptiveColor{Light: "#b2b2b2", Dark: "#585858"}
+	cFill    = lipgloss.AdaptiveColor{Light: "#ebebeb", Dark: "#262626"}
+	cFillSel = lipgloss.AdaptiveColor{Light: "#dde6f2", Dark: "#2f3744"}
 
 	sTitle  = lipgloss.NewStyle().Bold(true)
 	sDim    = lipgloss.NewStyle().Foreground(cDim)
@@ -42,8 +44,8 @@ var (
 	sRed    = lipgloss.NewStyle().Foreground(cRed)
 	sAccent = lipgloss.NewStyle().Foreground(cAccent).Bold(true)
 	sCard   = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(cFaint).
-		Padding(0, 1)
-	sCardSel = sCard.BorderForeground(cAccent)
+		Background(cFill).BorderBackground(cFill).Padding(0, 1)
+	sCardSel = sCard.BorderForeground(cAccent).Background(cFillSel).BorderBackground(cFillSel)
 )
 
 type item struct {
@@ -518,6 +520,15 @@ func (m model) cardStatus(name string) []string {
 	return []string{""}
 }
 
+func renderCard(style lipgloss.Style, body string) string {
+	marker := lipgloss.NewStyle().Background(style.GetBackground()).Render("|")
+	open := marker[:strings.Index(marker, "|")]
+	if open != "" {
+		body = strings.ReplaceAll(body, "\x1b[0m", "\x1b[0m"+open)
+	}
+	return style.Render(body)
+}
+
 func (m model) renderItem(i, number int) string {
 	it, sel := m.items[i], i == m.cursor
 	style := sCard.Width(m.cardW)
@@ -537,7 +548,7 @@ func (m model) renderItem(i, number int) string {
 		if m.mode == modeNaming && sel {
 			body = indent + m.input.View()
 		}
-		return style.Render(head + "\n" + body)
+		return renderCard(style, head+"\n"+body)
 	}
 	nameStyle := lipgloss.NewStyle()
 	if sel {
@@ -569,7 +580,7 @@ func (m model) renderItem(i, number int) string {
 			lines = append(lines, indent+sRed.Render(l))
 		}
 	}
-	return style.Render(strings.Join(lines, "\n"))
+	return renderCard(style, strings.Join(lines, "\n"))
 }
 
 // rowIndented is row() for lines that start after the card's indent.
