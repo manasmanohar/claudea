@@ -81,6 +81,7 @@ type model struct {
 	status      string
 	statusIsErr bool
 	height      int
+	width       int
 	cardW       int
 }
 
@@ -193,7 +194,7 @@ const saveFirst = "save the signed-in account first — press Enter on its card 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.height = msg.Height
+		m.height, m.width = msg.Height, msg.Width
 		m.cardW = max(min(maxCardWidth, msg.Width-2), 26)
 		m.bar.Width = m.cardW - 25
 		return m, nil
@@ -380,6 +381,8 @@ func (m model) updateConfirm(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m model) updateNaming(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch k.String() {
+	case "ctrl+c":
+		return m, tea.Quit
 	case "esc":
 		m.mode = modeBrowse
 		m.input.Blur()
@@ -581,7 +584,11 @@ func (m model) rowIndented(left, right string) string {
 
 func (m model) help() string {
 	if m.mode == modeConfirmRemove {
-		return sRed.Render(fmt.Sprintf("remove '%s'? y / n", m.items[m.cursor].name))
+		it := m.items[m.cursor]
+		if it.name == m.active {
+			return sRed.Render(fmt.Sprintf("remove '%s' from claudea? you stay signed in to it · y / n", it.name))
+		}
+		return sRed.Render(fmt.Sprintf("remove '%s'? y / n", it.name))
 	}
 	if m.mode == modeNaming {
 		return sDim.Render("enter save · esc cancel")
@@ -604,13 +611,19 @@ func (m model) View() string {
 	if !slices.ContainsFunc(m.items, func(it item) bool { return it.kind != "add" }) {
 		header += "\n\n" + sDim.Render(" No accounts saved yet. Press Enter to sign in to Claude in your browser —\n the account you sign in with is saved here, then add more the same way.")
 	}
-	footer := " " + m.help()
+	wrapFooter := func(s string) string {
+		if m.width > 2 {
+			return lipgloss.NewStyle().Width(m.width - 1).Render(s)
+		}
+		return s
+	}
+	footer := " " + wrapFooter(m.help())
 	if m.status != "" && m.mode != modeConfirmRemove {
 		st := sGreen
 		if m.statusIsErr {
 			st = sRed
 		}
-		footer = " " + st.Render(m.status) + "\n" + footer
+		footer = " " + wrapFooter(st.Render(m.status)) + "\n" + footer
 	}
 
 	rendered := make([]string, len(m.items))
