@@ -232,6 +232,9 @@ func use(name string) error {
 				return fmt.Errorf("no account '%s' — did you mean '%s'?", name, n)
 			}
 		}
+		if len(all) == 0 {
+			return errors.New("no saved accounts yet — run claudea to add one")
+		}
 		return fmt.Errorf("no account '%s' — saved: %s", name, strings.Join(all, ", "))
 	}
 	p := loadProfile(name)
