@@ -55,11 +55,31 @@ limits are on one screen, so you switch to the one that has headroom.
 
 ## Quick start
 
-**Requirements:** macOS, [Claude Code](https://claude.com/claude-code) installed and signed in, Go 1.23+ to build.
+**Requirements:** macOS, with [Claude Code](https://claude.com/claude-code) installed and signed in.
+
+**Homebrew:**
+
+```sh
+brew install manasmanohar/tap/claudea
+```
+
+**Manual download** (no Go needed): get the file for your Mac from the
+[latest release](https://github.com/manasmanohar/claudea/releases/latest) — `arm64` for Apple Silicon,
+`amd64` for Intel — then:
+
+```sh
+tar -xzf claudea_*_darwin_*.tar.gz
+mkdir -p ~/.local/bin && mv claudea ~/.local/bin/      # any directory on your PATH works
+```
+
+If you download in a browser, macOS may block the first run ("unidentified developer"):
+run `xattr -d com.apple.quarantine ~/.local/bin/claudea` once.
+
+**Build from source** (needs Go 1.23+):
 
 ```sh
 git clone https://github.com/manasmanohar/claudea ~/claudea
-cd ~/claudea && go build -o ~/.local/bin/claudea .     # any directory on your PATH works
+cd ~/claudea && go build -o ~/.local/bin/claudea .
 ```
 
 **Save your accounts (once per account):**

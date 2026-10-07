@@ -1,0 +1,19 @@
+version: 2
+project_name: claudea
+builds:
+  - env: [CGO_ENABLED=0]
+    goos: [darwin]
+    goarch: [arm64, amd64]
+archives:
+  - formats: [tar.gz]
+    name_template: "claudea_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+checksum:
+  name_template: checksums.txt
+brews:
+  - repository:
+      owner: manasmanohar
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    homepage: https://github.com/manasmanohar/claudea
+    description: Switch Claude Code between accounts and see each account's usage
+    license: MIT
