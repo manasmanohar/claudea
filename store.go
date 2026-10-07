@@ -342,7 +342,7 @@ func getUsage(name string, live bool) (*usage, error) {
 		}
 		json.NewDecoder(resp.Body).Decode(&e)
 		if e.Error.Message != "" {
-			return nil, fmt.Errorf("Anthropic refused (%d): %s", resp.StatusCode, e.Error.Message)
+			return nil, fmt.Errorf("%s (%d)", strings.TrimSuffix(e.Error.Message, "."), resp.StatusCode)
 		}
 		return nil, fmt.Errorf("usage request failed (%d)", resp.StatusCode)
 	}

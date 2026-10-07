@@ -494,32 +494,28 @@ func wrap(s string, width, maxLines int) []string {
 	return lines
 }
 
-func (m model) cardStatus(name string) string {
+func (m model) cardStatus(name string) []string {
 	c, cached := m.cache[name]
 	switch {
 	case name == m.inFlight:
-		return m.spin.View() + sDim.Render(" updating")
+		return []string{m.spin.View() + sDim.Render(" updating")}
 	case c.Limited:
-		return sDim.Render("rate limited · retry in " + fmtDur(m.nextCheckIn(name)))
+		return []string{sDim.Render("rate limited · retry in " + fmtDur(m.nextCheckIn(name))), sDim.Render("rate limited")}
 	case m.usageErr[name] != "":
-		label := "update failed"
 		if m.usageErr[name] == errOffline.Error() {
-			label = "offline"
+			return []string{sRed.Render("offline")}
 		}
-		if cached && c.Usage != nil {
-			return sRed.Render(label) + sDim.Render(" · "+fmtAge(c.At))
-		}
-		return sRed.Render(label)
+		return []string{sRed.Render("update failed")}
 	case slices.Contains(m.queue, name):
 		if cached && c.Usage != nil {
-			return sDim.Render(fmtAge(c.At) + " · queued")
+			return []string{sDim.Render(fmtAge(c.At) + " · queued"), sDim.Render("queued")}
 		}
-		return sDim.Render("queued")
+		return []string{sDim.Render("queued")}
 	}
 	if cached && c.Usage != nil {
-		return sDim.Render(fmtAge(c.At))
+		return []string{sDim.Render(fmtAge(c.At))}
 	}
-	return ""
+	return []string{""}
 }
 
 func (m model) renderItem(i, number int) string {
@@ -568,7 +564,8 @@ func (m model) renderItem(i, number int) string {
 		lines = append(lines, indent+m.spin.View()+sDim.Render(" loading usage"), "")
 	}
 	if reason != "" {
-		for _, l := range wrap(reason, inner-len(indent), 3) {
+		lines = append(lines, "")
+		for _, l := range wrap("error: "+reason, inner-len(indent), 3) {
 			lines = append(lines, indent+sRed.Render(l))
 		}
 	}
@@ -576,8 +573,15 @@ func (m model) renderItem(i, number int) string {
 }
 
 // rowIndented is row() for lines that start after the card's indent.
-func (m model) rowIndented(left, right string) string {
+func (m model) rowIndented(left string, rights []string) string {
 	inner := m.cardW - 2 - len(indent)
+	right := rights[len(rights)-1]
+	for _, r := range rights {
+		if lipgloss.Width(left)+lipgloss.Width(r)+1 <= inner {
+			right = r
+			break
+		}
+	}
 	left = truncate(left, inner-lipgloss.Width(right)-1)
 	return sDim.Render(left) + strings.Repeat(" ", max(inner-lipgloss.Width(left)-lipgloss.Width(right), 1)) + right
 }
